@@ -1,7 +1,8 @@
 from django.http import HttpResponse, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
+from django.core.exceptions import ValidationError
 
-from project.utils import format_records, email_validator
+from project.utils import format_records
 
 from teachers.models import Teacher
 from teachers.forms import TeacherCreateForm
@@ -30,8 +31,6 @@ def get_teachers(request, args):
 
 @csrf_exempt
 def create_teacher(request):
-    error_email = ''
-
     if request.method == 'GET':
 
         form = TeacherCreateForm()
@@ -39,17 +38,16 @@ def create_teacher(request):
     elif request.method == 'POST':
 
         form = TeacherCreateForm(data=request.POST)
-        if form.is_valid() and email_validator(form.data['email']):
+
+        if form.is_valid():
             form.save()
             return HttpResponseRedirect('/teachers/')
-        elif not email_validator(form.data['email']):
-            error_email += 'enter valid email'
 
     html_form = f"""
         <form method="post">
 
-        { form.as_p() }
-        { error_email }
+        {form.as_p()}
+
         <input type="submit" value="Submit">
 
         </form>
